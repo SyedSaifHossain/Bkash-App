@@ -22,8 +22,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import com.example.bkashapp.BkashPink
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.graphics.graphicsLayer
 import com.example.bkashapp.R
+import com.example.bkashapp.ui.theme.BkashPink
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.yield
 
@@ -41,8 +43,10 @@ data class OtherService(val nameEn: String, val nameBn: String, val iconRes: Int
 @Composable
 fun HomeScreen(
     isEnglish: Boolean,
-    onLanguageChange: (Boolean) -> Unit
-) {
+    onLanguageChange: (Boolean) -> Unit,
+    phoneNumber: String = "",
+    onLogoutClick: () -> Unit = {}
+)  {
     // List of services based on your screenshots
     val mainServices = listOf(
         BkashService("Send Money", "সেন্ট মানি", R.drawable.ic_send_money),
@@ -77,7 +81,7 @@ fun HomeScreen(
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 // 1. Header with Scenic Background
                 item {
-                    HomeHeader(isEnglish, onLanguageChange)
+                    HomeHeader(isEnglish, onLanguageChange, phoneNumber, onLogoutClick)
                 }
 
                 // 2. Main Services Card
@@ -106,7 +110,12 @@ fun HomeScreen(
 }
 
 @Composable
-fun HomeHeader(isEnglish: Boolean, onLanguageChange: (Boolean) -> Unit) {
+fun HomeHeader(
+    isEnglish: Boolean,
+    onLanguageChange: (Boolean) -> Unit,
+    phoneNumber: String = "",
+    onLogoutClick: () -> Unit = {}
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -141,10 +150,10 @@ fun HomeHeader(isEnglish: Boolean, onLanguageChange: (Boolean) -> Unit) {
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // Name and Balance Button
+                // Phone Number and Balance Button
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "kawser ahmed kazol",
+                        text = if (phoneNumber.isNotEmpty()) "$phoneNumber" else "01712345678",
                         color = Color.White,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium
@@ -183,13 +192,55 @@ fun HomeHeader(isEnglish: Boolean, onLanguageChange: (Boolean) -> Unit) {
                     }
                 }
 
-                // Search and Bird Logo
-                Icon(Icons.Default.Search, null, tint = Color.White, modifier = Modifier.size(28.dp))
-                Spacer(modifier = Modifier.width(12.dp))
+                // Reward Icon (white tinted)
                 Image(
-                    painter = painterResource(id = R.drawable.ic_bkash_bird),
+                    painter = painterResource(id = R.drawable.ic_rewards),
+                    contentDescription = "Rewards",
+                    colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color.White),
+                    modifier = Modifier.size(28.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+
+                // Bird Logo
+                Image(
+                    painter = painterResource(id = R.drawable.bkash_bird),
                     contentDescription = null,
+                    colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color.White),
                     modifier = Modifier.size(35.dp)
+                )
+            }
+        }
+
+        // ✅ Logout dot — top-right corner of the whole header, below status bar
+        var showLogoutMenu by remember { mutableStateOf(false) }
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 13.dp, end = 8.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(15.dp)
+                    .background(Color.LightGray, CircleShape)
+                    .clickable { showLogoutMenu = true }
+            )
+
+            DropdownMenu(
+                expanded = showLogoutMenu,
+                onDismissRequest = { showLogoutMenu = false }
+            ) {
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = if (isEnglish) "Logout" else "লগ আউট",
+                            color = BkashPink,
+                            fontWeight = FontWeight.Medium
+                        )
+                    },
+                    onClick = {
+                        showLogoutMenu = false
+                        onLogoutClick()
+                    }
                 )
             }
         }
@@ -204,69 +255,95 @@ fun MainServicesSection(isEnglish: Boolean, services: List<BkashService>) {
     // 2. Decide which items to show: only 8 (2 rows) if collapsed, or all of them if expanded
     val visibleServices = if (isExpanded) services else services.take(8)
 
-    Surface(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .offset(y = (-25).dp)
-            .padding(horizontal = 12.dp),
-        shape = RoundedCornerShape(12.dp),
-        color = Color.White,
-        shadowElevation = 2.dp
+            .padding(horizontal = 12.dp, vertical = 16.dp)
     ) {
-        Column(modifier = Modifier.padding(vertical = 16.dp)) {
-            // 3. Create the grid rows
-            val rows = visibleServices.chunked(4)
-            rows.forEach { rowItems ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceAround
-                ) {
-                    rowItems.forEach { service ->
-                        ServiceItem(isEnglish, service)
-                    }
+        // 3. Create the grid rows
+        val rows = visibleServices.chunked(4)
+        Box {
+            Column {
+                rows.forEachIndexed { index, rowItems ->
+                    val isLastRow = index == rows.lastIndex
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
+                            .then(
+                                // ✅ Only fade the last row, and only while collapsed
+                                if (isLastRow && !isExpanded) {
+                                    Modifier.graphicsLayer(alpha = 0.99f)
+                                        .drawWithCache {
+                                            onDrawWithContent {
+                                                drawContent()
+                                                drawRect(
+                                                    brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                                                        colors = listOf(
+                                                            Color.Transparent,
+                                                            Color(0xFFF5F5F5).copy(alpha = 0.85f)
+                                                        ),
+                                                        startY = size.height * 0.3f,
+                                                        endY = size.height
+                                                    )
+                                                )
+                                            }
+                                        }
+                                } else Modifier
+                            ),
+                        horizontalArrangement = Arrangement.SpaceAround
+                    ) {
+                        rowItems.forEach { service ->
+                            ServiceItem(isEnglish, service)
+                        }
 
-                    // Logic to maintain spacing if a row has less than 4 items
-                    if (rowItems.size < 4) {
-                        repeat(4 - rowItems.size) {
-                            Spacer(modifier = Modifier.width(80.dp))
+                        // Logic to maintain spacing if a row has less than 4 items
+                        if (rowItems.size < 4) {
+                            repeat(4 - rowItems.size) {
+                                Spacer(modifier = Modifier.width(80.dp))
+                            }
                         }
                     }
                 }
             }
+        }
 
-            // 4. "See More / See Less" Button logic
-            Box(
+        // 4. "See More / See Less" Pill Button
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 12.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp)
-                    .clickable { isExpanded = !isExpanded }, // Toggle the expansion state
-                contentAlignment = Alignment.Center
+                    .clip(RoundedCornerShape(50))
+                    .border(1.dp, BkashPink, RoundedCornerShape(50))
+                    .clickable { isExpanded = !isExpanded }
+                    .padding(horizontal = 16.dp, vertical = 6.dp)
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = if (isExpanded) {
-                            if (isEnglish) "See Less" else "বন্ধ করুন"
-                        } else {
-                            if (isEnglish) "See More" else "আরো দেখুন"
-                        },
-                        color = BkashPink,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Icon(
-                        imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                        contentDescription = null,
-                        tint = BkashPink,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
+                Text(
+                    text = if (isExpanded) {
+                        if (isEnglish) "See Less" else "বন্ধ করুন"
+                    } else {
+                        if (isEnglish) "See More" else "আরো দেখুন"
+                    },
+                    color = BkashPink,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Icon(
+                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = null,
+                    tint = BkashPink,
+                    modifier = Modifier.size(18.dp)
+                )
             }
         }
     }
 }
-
 @Composable
 fun ServiceItem(isEnglish: Boolean, service: BkashService) {
     Column(
@@ -566,6 +643,7 @@ fun BkashBottomNav(isEnglish: Boolean) {
     showSystemUi = true,
     device = "spec:width=411dp,height=891dp"
 )
+
 @Composable
 fun HomeScreenPreview() {
     var isEnglish by remember { mutableStateOf(false) }

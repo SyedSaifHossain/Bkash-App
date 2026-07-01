@@ -2,12 +2,9 @@ package com.example.bkashapp.ui.theme.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Fingerprint
@@ -16,7 +13,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -25,65 +21,16 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.bkashapp.R
 import com.example.bkashapp.ui.theme.BkashPink
 import com.example.bkashapp.ui.theme.BkashTurquoise
-import com.example.bkashapp.R
-
-// ==================== LIGHT LANGUAGE TOGGLE ====================
-@Composable
-fun LightLanguageToggle(
-    isEnglish: Boolean,
-    onLanguageChange: (Boolean) -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .background(Color.White, RoundedCornerShape(20.dp))
-            .border(1.dp, BkashPink, RoundedCornerShape(20.dp))
-            .padding(2.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // English Option
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(18.dp))
-                .clickable { onLanguageChange(true) }
-                .background(if (isEnglish) BkashPink else Color.Transparent)
-                .padding(horizontal = 16.dp, vertical = 6.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "Eng",
-                color = if (isEnglish) Color.White else BkashPink,
-                fontSize = 14.sp,
-                fontWeight = if (isEnglish) FontWeight.Bold else FontWeight.Medium
-            )
-        }
-
-        // Bangla Option
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(18.dp))
-                .clickable { onLanguageChange(false) }
-                .background(if (!isEnglish) BkashPink else Color.Transparent)
-                .padding(horizontal = 16.dp, vertical = 6.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "বাংলা",
-                color = if (!isEnglish) Color.White else BkashPink,
-                fontSize = 14.sp,
-                fontWeight = if (!isEnglish) FontWeight.Bold else FontWeight.Medium
-            )
-        }
-    }
-}
 
 @Composable
-fun LoginScreen(
+fun SignUpScreen(
     isEnglish: Boolean,
     onLanguageChange: (Boolean) -> Unit,
     onNextClick: (phone: String, pin: String) -> Unit,
-    onSignUpClick: () -> Unit
+    onLoginClick: () -> Unit
 ) {
     var accountNumber by remember { mutableStateOf("") }
     var pin by remember { mutableStateOf("") }
@@ -98,11 +45,11 @@ fun LoginScreen(
             .background(Color.White)
             .systemBarsPadding()
     ) {
-        // ==================== LANGUAGE TOGGLE - TOP RIGHT ====================
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 10.dp, end = 20.dp, start = 20.dp),
+                .padding(top = 20.dp, end = 20.dp, start = 20.dp),
             contentAlignment = Alignment.TopEnd
         ) {
             LightLanguageToggle(
@@ -115,8 +62,7 @@ fun LoginScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-
-                .padding(horizontal = 20.dp, vertical = 10.dp ),
+                .padding(horizontal = 20.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -133,10 +79,9 @@ fun LoginScreen(
                 modifier = Modifier.size(32.dp)
             )
         }
-
         Spacer(modifier = Modifier.height(8.dp))
 
-        // ==================== MAIN CONTENT ====================
+        // Main Content
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -144,24 +89,23 @@ fun LoginScreen(
                 .padding(horizontal = 24.dp)
         ) {
             Text(
-                text = if (isEnglish) "Log In" else "লগ ইন",
+                text = if (isEnglish) "Sign Up" else "সাইন আপ",
                 fontSize = 26.sp,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = if (isEnglish) "to your bKash account" else "আপনার বিকাশ অ্যাকাউন্টে",
+                text = if (isEnglish) "Create your bKash account" else "আপনার বিকাশ অ্যাকাউন্ট খুলুন",
                 fontSize = 16.sp,
                 color = Color.Gray
             )
-
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Account Number
             Text(
                 text = if (isEnglish) "Account Number" else "অ্যাকাউন্ট নাম্বার",
                 color = Color.Gray,
                 fontSize = 13.sp
             )
+
             TextField(
                 value = accountNumber,
                 onValueChange = {
@@ -169,7 +113,7 @@ fun LoginScreen(
                 },
                 prefix = { Text("+88 ", color = Color.Black) },
                 placeholder = { Text("01XXXXXXXXX", color = Color.LightGray) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Number),
                 colors = TextFieldDefaults.colors(
                     unfocusedContainerColor = Color.White,
                     focusedContainerColor = Color.White,
@@ -179,10 +123,8 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-
             Spacer(modifier = Modifier.height(8.dp))
 
-            // PIN Field
             Text(
                 text = if (isEnglish) "bKash PIN" else "বিকাশ পিন",
                 color = Color.Gray,
@@ -200,7 +142,7 @@ fun LoginScreen(
                     )
                 },
                 visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                 trailingIcon = {
                     Icon(
                         Icons.Default.Fingerprint,
@@ -209,7 +151,6 @@ fun LoginScreen(
                         modifier = Modifier.size(28.dp)
                     )
                 },
-
                 colors = TextFieldDefaults.colors(
                     unfocusedContainerColor = Color.White,
                     focusedContainerColor = Color.White,
@@ -223,13 +164,13 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = if (isEnglish) "No account? Sign UP" else "অ্যাকাউন্ট নেই? সাইন আপ করুন",
+                text = if (isEnglish) "I have account? Login" else "অ্যাকাউন্ট আছে? লগ ইন করুন",
                 color = BkashPink,
                 fontWeight = FontWeight.Medium,
-                modifier = Modifier.clickable { onSignUpClick() }
+                modifier = Modifier.clickable { onLoginClick() }
             )
         }
 
@@ -247,7 +188,7 @@ fun LoginScreen(
                 .padding(horizontal = 20.dp, vertical = 16.dp)
         ) {
             Text(
-                text = if (isEnglish) "Next" else "পরবর্তী",
+                text = if (isEnglish) "Sign Up" else "সাইন আপ",
                 color = Color.White,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
@@ -264,28 +205,28 @@ fun LoginScreen(
 }
 
 // ==================== PREVIEW ====================
-@Preview(device = "id:pixel_5", showSystemUi = true, name = "Login Screen - English")
+@Preview(device = "id:pixel_5", showSystemUi = true, name = "Sign Up Screen - English")
 @Composable
-fun PreviewLoginEnglish() {
+fun PreviewSignUpEnglish() {
     MaterialTheme {
-        LoginScreen(
+        SignUpScreen(
             isEnglish = true,
             onLanguageChange = {},
             onNextClick = { _, _ -> },
-            onSignUpClick = {}
+            onLoginClick = {}
         )
     }
 }
 
-@Preview(device = "id:pixel_5", showSystemUi = true, name = "Login Screen - Bangla")
+@Preview(device = "id:pixel_5", showSystemUi = true, name = "Sign Up Screen - Bangla")
 @Composable
-fun PreviewLoginBangla() {
+fun PreviewSignUpBangla() {
     MaterialTheme {
-        LoginScreen(
+        SignUpScreen(
             isEnglish = false,
             onLanguageChange = {},
             onNextClick = { _, _ -> },
-            onSignUpClick = {}
+            onLoginClick = {}
         )
     }
 }
